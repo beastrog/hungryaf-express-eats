@@ -1,73 +1,171 @@
-# Welcome to your Lovable project
 
-## Project info
+# HungryAF Express Eats
 
-**URL**: https://lovable.dev/projects/137064a7-0aa8-4b87-b339-3c6b7255a73a
+A campus food delivery application built with React, TypeScript, Clerk for authentication, and Supabase for backend services.
 
-## How can I edit this code?
+## Tech Stack
 
-There are several ways of editing your application.
+- React with TypeScript
+- Tailwind CSS for styling
+- Clerk for authentication
+- ShadCN UI + Framer Motion for components and animations
+- Supabase for database, real-time subscriptions
+- Razorpay for payments
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/137064a7-0aa8-4b87-b339-3c6b7255a73a) and start prompting.
+- User authentication with email/phone OTP
+- Campus-restricted domains (@yourcollege.edu)
+- Browse and order food from campus vendors
+- Real-time order tracking
+- Delivery partner system
+- Admin dashboard for menu management
+- Wallet system for delivery partners
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js (v16+)
+- npm or yarn
+- Supabase account
+- Clerk account
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. Clone this repository
+   ```bash
+   git clone <repository-url>
+   cd hungryaf-express-eats
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install dependencies
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Create a `.env.local` file based on the `.env.local.example`
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   
+4. Update the environment variables in `.env.local` with your own keys
 
-# Step 3: Install the necessary dependencies.
-npm i
+5. Start the development server
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+## Database Setup
+
+1. Create a new Supabase project
+
+2. Run the following SQL migrations in the Supabase SQL Editor:
+
+```sql
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- users
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  clerk_user_id TEXT UNIQUE NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  role TEXT CHECK (role IN ('eater','delivery','admin')) DEFAULT 'eater',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- menu items
+CREATE TABLE menu (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  description TEXT,
+  price INT NOT NULL,
+  available BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- orders
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id),
+  items JSONB NOT NULL,
+  total_amount INT NOT NULL,
+  status TEXT CHECK (status IN ('placed','paid','delivered')) DEFAULT 'placed',
+  payment_status TEXT CHECK (payment_status IN ('pending','completed')) DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- deliveries
+CREATE TABLE deliveries (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  order_id UUID REFERENCES orders(id),
+  delivery_partner_id UUID REFERENCES users(id),
+  status TEXT CHECK (status IN ('pending','accepted','completed')) DEFAULT 'pending',
+  delivered_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- wallets & earnings
+CREATE TABLE wallets (
+  user_id UUID PRIMARY KEY REFERENCES users(id),
+  balance INT DEFAULT 0,
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE delivery_earnings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  delivery_partner_id UUID REFERENCES users(id),
+  order_id UUID REFERENCES orders(id),
+  earning INT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Insert some sample menu items
+INSERT INTO menu (name, description, price, available) VALUES
+('Classic Burger', 'Juicy beef patty with lettuce, tomato, and special sauce', 29900, TRUE),
+('Veggie Wrap', 'Fresh vegetables, hummus, and feta cheese in a warm tortilla', 19900, TRUE),
+('Chicken Biryani', 'Aromatic rice dish with tender chicken pieces', 24900, TRUE),
+('Masala Dosa', 'Crispy South Indian crepe filled with spiced potatoes', 14900, TRUE),
+('Fries', 'Crispy golden fries with a dash of salt', 9900, TRUE),
+('Cold Coffee', 'Refreshing cold coffee with ice cream', 12900, TRUE);
 ```
 
-**Edit a file directly in GitHub**
+3. Set up Clerk authentication
+   - Create a Clerk account at [clerk.dev](https://clerk.dev)
+   - Add your domain to the allowed list
+   - Configure email/SMS providers
+   - Set email domain restrictions to @yourcollege.edu
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+4. Configure Supabase Auth policies
+   
+5. Deploy Edge Functions for API routes
 
-**Use GitHub Codespaces**
+## API Routes / Edge Functions
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The following API routes should be implemented as Supabase Edge Functions:
 
-## What technologies are used for this project?
+- `POST /api/checkout` - Create Razorpay order
+- `POST /api/orders` - Insert into orders table
+- `POST /api/deliveries` - Assign delivery
+- `POST /api/deliveries/:id/complete` - Complete delivery and update earnings
 
-This project is built with:
+## Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Build the application
+   ```bash
+   npm run build
+   # or
+   yarn build
+   ```
 
-## How can I deploy this project?
+2. Deploy to your preferred hosting platform (Vercel, Netlify, etc.)
 
-Simply open [Lovable](https://lovable.dev/projects/137064a7-0aa8-4b87-b339-3c6b7255a73a) and click on Share -> Publish.
+## License
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is licensed under the MIT License - see the LICENSE file for details.
