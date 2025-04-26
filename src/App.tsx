@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
-import { dark } from "@clerk/themes";
+import { dark } from "@clerk/themes";  // This import should now work
 import { useTheme } from "./hooks/use-theme";
 
 // Pages
