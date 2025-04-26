@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
 import { createClient } from "@supabase/supabase-js";
@@ -32,8 +31,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 // Initialize Supabase client
-const supabaseUrl = "your-supabase-url";
-const supabaseKey = "your-supabase-anon-key";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Define form schema for menu items
@@ -357,9 +356,9 @@ const AdminDashboard = () => {
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">Available</FormLabel>
-                            <FormDescription>
+                            <p className="text-sm text-muted-foreground">
                               Make this item available on the menu
-                            </FormDescription>
+                            </p>
                           </div>
                           <FormControl>
                             <Switch

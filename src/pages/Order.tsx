@@ -9,9 +9,9 @@ import { Search } from "lucide-react";
 import MenuCard from "@/components/MenuCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Initialize Supabase client
-const supabaseUrl = "your-supabase-url";
-const supabaseKey = "your-supabase-anon-key";
+// Initialize Supabase client with environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const OrderPage = () => {
