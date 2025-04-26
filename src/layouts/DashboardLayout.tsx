@@ -1,4 +1,3 @@
-
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { UserButton, useUser } from "@clerk/clerk-react";
@@ -18,9 +17,9 @@ import { Button } from "@/components/ui/button";
 import CartSidebar from "@/components/CartSidebar";
 import { useCart } from "@/hooks/use-cart";
 
-// Initialize Supabase client
-const supabaseUrl = "your-supabase-url";
-const supabaseKey = "your-supabase-anon-key";
+// Initialize Supabase client with environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const DashboardLayout = () => {
