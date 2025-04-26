@@ -1,4 +1,3 @@
-
 import { useUser } from "@clerk/clerk-react";
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
@@ -6,8 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 import { Loader } from "lucide-react";
 
 // Initialize Supabase client with environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface AuthWrapperProps {

@@ -25,7 +25,7 @@ import AuthWrapper from "./components/AuthWrapper";
 const queryClient = new QueryClient();
 
 // Get publishable key from environment variables
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 
 const App = () => {
   const { theme } = useTheme();
