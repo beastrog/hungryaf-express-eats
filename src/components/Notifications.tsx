@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, Notification } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Bell } from "lucide-react";
 import {
@@ -16,14 +16,6 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  read: boolean;
-  created_at: string;
-}
-
 const Notifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -37,11 +29,14 @@ const Notifications = () => {
     const fetchNotifications = async () => {
       try {
         const { data, error } = await supabase
-          .from("notifications")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(10);
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10) as unknown as { 
+            data: Notification[] | null; 
+            error: any 
+          };
 
         if (error) {
           console.error("Error fetching notifications:", error);
@@ -95,7 +90,7 @@ const Notifications = () => {
         (payload) => {
           setNotifications(prev => 
             prev.map(notif => 
-              notif.id === payload.new.id ? { ...notif, ...payload.new } : notif
+              notif.id === payload.new.id ? { ...notif, ...payload.new } as Notification : notif
             )
           );
           
@@ -115,9 +110,9 @@ const Notifications = () => {
   const markAsRead = async (id: string) => {
     try {
       const { error } = await supabase
-        .from("notifications")
+        .from('notifications')
         .update({ read: true })
-        .eq("id", id);
+        .eq('id', id) as unknown as { data: any; error: any };
 
       if (error) {
         console.error("Error marking notification as read:", error);
@@ -142,10 +137,10 @@ const Notifications = () => {
 
     try {
       const { error } = await supabase
-        .from("notifications")
+        .from('notifications')
         .update({ read: true })
-        .eq("user_id", user.id)
-        .eq("read", false);
+        .eq('user_id', user.id)
+        .eq('read', false) as unknown as { data: any; error: any };
 
       if (error) {
         console.error("Error marking all notifications as read:", error);

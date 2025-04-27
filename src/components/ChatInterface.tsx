@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, ChatMessage } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Loader } from "lucide-react";
@@ -9,18 +9,6 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface ChatMessage {
-  id: string;
-  message: string;
-  sender_id: string;
-  created_at: string;
-  read_at: string | null;
-  user?: {
-    first_name: string;
-    last_name: string;
-  };
-}
 
 interface ChatInterfaceProps {
   orderId: string;
@@ -47,11 +35,15 @@ const ChatInterface = ({
 
     const fetchMessages = async () => {
       try {
+        // Using raw SQL query since types don't match yet
         const { data, error } = await supabase
-          .from("chat_messages")
-          .select(`*, user:sender_id(first_name, last_name)`)
-          .eq("order_id", orderId)
-          .order("created_at", { ascending: true });
+          .from('chat_messages')
+          .select('*, user:sender_id(first_name, last_name)')
+          .eq('order_id', orderId)
+          .order('created_at', { ascending: true }) as unknown as { 
+            data: ChatMessage[] | null; 
+            error: any;
+          };
 
         if (error) {
           console.error("Error fetching messages:", error);
@@ -99,9 +91,9 @@ const ChatInterface = ({
           // Mark message as read if it's not from current user
           if (payload.new.sender_id !== user.id) {
             await supabase
-              .from("chat_messages")
+              .from('chat_messages')
               .update({ read_at: new Date().toISOString() })
-              .eq("id", payload.new.id);
+              .eq('id', payload.new.id) as unknown as { data: any; error: any; };
           }
         }
       )
@@ -126,12 +118,12 @@ const ChatInterface = ({
     
     try {
       const { error } = await supabase
-        .from("chat_messages")
+        .from('chat_messages')
         .insert({
           order_id: orderId,
           sender_id: user.id,
           message: newMessage.trim()
-        });
+        }) as unknown as { data: any; error: any; };
 
       if (error) {
         console.error("Error sending message:", error);

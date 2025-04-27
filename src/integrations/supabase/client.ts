@@ -13,3 +13,27 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Add a type-safe helper for the new tables until types.ts is updated
+export type ChatMessage = {
+  id: string;
+  order_id: string;
+  sender_id: string;
+  message: string;
+  created_at: string;
+  read_at: string | null;
+  user?: {
+    first_name: string;
+    last_name: string;
+  };
+};
+
+export type Notification = {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+};
+
