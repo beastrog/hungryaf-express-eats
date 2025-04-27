@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
-import { createClient } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -29,11 +28,7 @@ import { Check, Edit, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/integrations/supabase/client";
 
 // Define form schema for menu items
 const menuItemSchema = z.object({
