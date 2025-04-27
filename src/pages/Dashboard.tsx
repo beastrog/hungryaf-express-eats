@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
-import { createClient } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { ShoppingCart, Menu, Package, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,26 +11,23 @@ import { toast } from "sonner";
 import OrderStatusCard from "@/components/OrderStatusCard";
 import { motion } from "framer-motion";
 
-// Initialize Supabase client with environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 const Dashboard = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [userRole, setUserRole] = useState("eater");
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const getUserInfo = async () => {
       if (!user) return;
       
       try {
+        // Get user's details from database
         const { data, error } = await supabase
           .from("users")
           .select("role, id")
-          .eq("clerk_user_id", user.id)
+          .eq("id", user.id)
           .single();
         
         if (error) {
@@ -40,6 +37,7 @@ const Dashboard = () => {
         
         if (data) {
           setUserRole(data.role);
+          setUserId(data.id);
           
           // Fetch recent orders for this user
           const { data: orders, error: ordersError } = await supabase
@@ -65,24 +63,26 @@ const Dashboard = () => {
     getUserInfo();
     
     // Set up real-time subscription for orders
-    const ordersSubscription = supabase
-      .channel("orders-channel")
-      .on("postgres_changes", 
-        { event: "UPDATE", schema: "public", table: "orders" }, 
-        (payload) => {
-          toast.info("An order has been updated!");
-          // Refresh orders
-          getUserInfo();
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      ordersSubscription.unsubscribe();
-    };
-  }, [user]);
+    if (userId) {
+      const ordersSubscription = supabase
+        .channel("orders-channel")
+        .on("postgres_changes", 
+          { event: "UPDATE", schema: "public", table: "orders", filter: `user_id=eq.${userId}` }, 
+          (payload) => {
+            toast.info("An order has been updated!");
+            // Refresh orders
+            getUserInfo();
+          }
+        )
+        .subscribe();
+      
+      return () => {
+        ordersSubscription.unsubscribe();
+      };
+    }
+  }, [user, userId]);
 
-  const userShortName = user?.firstName || user?.username || "User";
+  const userShortName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || "User";
 
   return (
     <motion.div 

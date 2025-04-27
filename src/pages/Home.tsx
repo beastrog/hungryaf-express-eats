@@ -1,21 +1,20 @@
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { SignIn, SignUp, useUser } from "@clerk/clerk-react";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
+import AuthForm from "@/components/auth/AuthForm";
 
 const Home = () => {
-  const { isSignedIn } = useUser();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (!isLoading && user) {
       navigate("/dashboard");
     }
-  }, [isSignedIn, navigate]);
+  }, [isLoading, user, navigate]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -41,34 +40,7 @@ const Home = () => {
           transition={{ delay: 0.3, duration: 0.5 }}
           className="max-w-md mx-auto bg-white dark:bg-card shadow-xl rounded-xl overflow-hidden"
         >
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "signin" | "signup")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
-            <TabsContent value="signin" className="p-4">
-              <SignIn 
-                appearance={{
-                  elements: {
-                    formButtonPrimary: "bg-hungryaf-primary hover:bg-hungryaf-primary/90",
-                    footerActionLink: "text-hungryaf-primary hover:text-hungryaf-primary/90"
-                  }
-                }}
-                afterSignInUrl="/dashboard"
-              />
-            </TabsContent>
-            <TabsContent value="signup" className="p-4">
-              <SignUp 
-                appearance={{
-                  elements: {
-                    formButtonPrimary: "bg-hungryaf-primary hover:bg-hungryaf-primary/90",
-                    footerActionLink: "text-hungryaf-primary hover:text-hungryaf-primary/90"
-                  }
-                }}
-                afterSignUpUrl="/dashboard"
-              />
-            </TabsContent>
-          </Tabs>
+          <AuthForm />
         </motion.div>
       </div>
 

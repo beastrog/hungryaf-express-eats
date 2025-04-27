@@ -1,9 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import OrderDetailsDialog from "@/components/OrderDetailsDialog";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface OrderStatusCardProps {
   order: {
@@ -22,54 +25,26 @@ interface OrderStatusCardProps {
 }
 
 const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
-  const [timeAgo, setTimeAgo] = useState("");
-  
-  useEffect(() => {
+  const [timeAgo, setTimeAgo] = useState(() => {
     // Calculate time ago on first render
-    updateTimeAgo();
-    
-    // Update time ago every minute
-    const interval = setInterval(updateTimeAgo, 60000);
-    return () => clearInterval(interval);
-  }, [order.created_at]);
-  
-  const updateTimeAgo = () => {
     const date = new Date(order.created_at);
     const now = new Date();
     const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     
-    let interval = seconds / 31536000;
-    if (interval > 1) {
-      setTimeAgo(`${Math.floor(interval)} years ago`);
-      return;
-    }
+    if (seconds < 60) return `${seconds} seconds ago`;
     
-    interval = seconds / 2592000;
-    if (interval > 1) {
-      setTimeAgo(`${Math.floor(interval)} months ago`);
-      return;
-    }
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minutes ago`;
     
-    interval = seconds / 86400;
-    if (interval > 1) {
-      setTimeAgo(`${Math.floor(interval)} days ago`);
-      return;
-    }
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hours ago`;
     
-    interval = seconds / 3600;
-    if (interval > 1) {
-      setTimeAgo(`${Math.floor(interval)} hours ago`);
-      return;
-    }
+    const days = Math.floor(hours / 24);
+    if (days === 1) return "yesterday";
+    if (days < 30) return `${days} days ago`;
     
-    interval = seconds / 60;
-    if (interval > 1) {
-      setTimeAgo(`${Math.floor(interval)} minutes ago`);
-      return;
-    }
-    
-    setTimeAgo(`${Math.floor(seconds)} seconds ago`);
-  };
+    return format(date, "MMM d, yyyy");
+  });
   
   // Format price from cents to INR
   const formatPrice = (price: number) => {
@@ -78,26 +53,6 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
       currency: 'INR',
       minimumFractionDigits: 0,
     }).format(price / 100);
-  };
-  
-  // Get status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "placed":
-        return "bg-amber-500";
-      case "paid":
-        return "bg-blue-500";
-      case "delivered":
-        return "bg-green-500";
-      case "pending":
-        return "bg-amber-500";
-      case "accepted":
-        return "bg-blue-500";
-      case "completed":
-        return "bg-green-500";
-      default:
-        return "bg-gray-500";
-    }
   };
   
   // Determine overall status
@@ -124,6 +79,7 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
   };
   
   const overallStatus = getOverallStatus();
+  const hasActiveDelivery = order.deliveries?.some(d => d.status === "accepted") || false;
   
   return (
     <Card className="overflow-hidden">
@@ -168,9 +124,37 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
       </CardContent>
       
       <CardFooter className="pt-2">
-        <Button variant="outline" className="w-full" size="sm">
-          View Details
-        </Button>
+        <div className="grid grid-cols-2 gap-2 w-full">
+          <OrderDetailsDialog 
+            orderId={order.id}
+            trigger={
+              <Button variant="outline" className="w-full" size="sm">
+                View Details
+              </Button>
+            }
+          />
+          
+          <OrderDetailsDialog 
+            orderId={order.id}
+            trigger={
+              <Button 
+                variant="outline" 
+                className={cn(
+                  "w-full", 
+                  hasActiveDelivery ? "bg-green-50 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800" : "text-muted-foreground"
+                )}
+                size="sm"
+                disabled={!hasActiveDelivery}
+              >
+                <MessageCircle className="h-4 w-4 mr-1" />
+                Chat
+                {hasActiveDelivery && (
+                  <span className="ml-1 h-2 w-2 rounded-full bg-green-500"></span>
+                )}
+              </Button>
+            }
+          />
+        </div>
       </CardFooter>
     </Card>
   );

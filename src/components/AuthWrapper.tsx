@@ -1,27 +1,24 @@
-import { useUser } from "@clerk/clerk-react";
+
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader } from "lucide-react";
-
-// Initialize Supabase client with environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AuthWrapperProps {
   children: ReactNode;
 }
 
 const AuthWrapper = ({ children }: AuthWrapperProps) => {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { user, isLoading } = useAuth();
   const [isUserRegistered, setIsUserRegistered] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [checkingUser, setCheckingUser] = useState(true);
 
   useEffect(() => {
     const checkUser = async () => {
-      if (!isLoaded || !isSignedIn) {
-        setIsLoading(false);
+      if (isLoading || !user) {
+        setCheckingUser(false);
         return;
       }
 
@@ -29,48 +26,30 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
         // Check if user exists in our database
         const { data, error } = await supabase
           .from("users")
-          .select("id")
-          .eq("clerk_user_id", user.id)
+          .select("id, role")
+          .eq("id", user.id)
           .single();
 
         if (error || !data) {
-          // User doesn't exist, create new user record
-          const { data: newUser, error: createError } = await supabase
-            .from("users")
-            .insert([
-              {
-                clerk_user_id: user.id,
-                first_name: user.firstName || "",
-                last_name: user.lastName || "",
-                role: "eater", // Default role
-              },
-            ])
-            .select()
-            .single();
-
-          if (createError) {
-            console.error("Error creating user:", createError);
-            setIsUserRegistered(false);
-          } else {
-            console.log("Created new user:", newUser);
-            setIsUserRegistered(true);
-          }
+          console.error("Error checking user:", error);
+          setIsUserRegistered(false);
         } else {
-          // User exists
+          console.log("User found:", data);
           setIsUserRegistered(true);
         }
       } catch (err) {
         console.error("Error checking user:", err);
         setIsUserRegistered(false);
+        toast.error("Failed to validate user profile. Please try again.");
       } finally {
-        setIsLoading(false);
+        setCheckingUser(false);
       }
     };
 
     checkUser();
-  }, [isLoaded, isSignedIn, user]);
+  }, [isLoading, user]);
 
-  if (!isLoaded || isLoading) {
+  if (isLoading || checkingUser) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader className="h-8 w-8 animate-spin text-hungryaf-primary" />
@@ -78,24 +57,28 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
     );
   }
 
-  if (!isSignedIn) {
+  if (!user) {
     return <Navigate to="/" replace />;
   }
 
   if (isUserRegistered === false) {
-    // There was an error registering the user
+    // There was an error finding the user record
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-500">Registration Error</h1>
           <p className="mt-2">
-            There was a problem registering your account. Please try again.
+            There was a problem with your account. Please try signing out and back in.
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              supabase.auth.signOut().then(() => {
+                window.location.href = "/";
+              });
+            }}
             className="mt-4 rounded bg-hungryaf-primary px-4 py-2 text-white"
           >
-            Retry
+            Sign Out
           </button>
         </div>
       </div>

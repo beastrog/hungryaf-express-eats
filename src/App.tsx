@@ -4,9 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ClerkProvider } from "@clerk/clerk-react";
-import { dark } from "@clerk/themes";  // This import should now work
 import { useTheme } from "./hooks/use-theme";
+import { AuthProvider } from "./hooks/use-auth";
 
 // Pages
 import Home from "./pages/Home";
@@ -24,36 +23,11 @@ import AuthWrapper from "./components/AuthWrapper";
 
 const queryClient = new QueryClient();
 
-// Get publishable key from environment variables
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
-
 const App = () => {
   const { theme } = useTheme();
 
-  if (!PUBLISHABLE_KEY) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-red-500">Configuration Error</h1>
-          <p className="mt-2 text-gray-600">
-            Missing Clerk Publishable Key. Check your environment variables.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <ClerkProvider 
-      publishableKey={PUBLISHABLE_KEY}
-      appearance={{
-        baseTheme: theme === "dark" ? dark : undefined,
-        elements: {
-          formButtonPrimary: "bg-hungryaf-primary hover:bg-hungryaf-primary/90",
-          footerActionLink: "text-hungryaf-primary hover:text-hungryaf-primary/90"
-        }
-      }}
-    >
+    <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -83,7 +57,7 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
-    </ClerkProvider>
+    </AuthProvider>
   );
 };
 

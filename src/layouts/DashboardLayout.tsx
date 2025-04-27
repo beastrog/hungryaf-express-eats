@@ -1,131 +1,192 @@
-import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { UserButton, useUser } from "@clerk/clerk-react";
-import { createClient } from "@supabase/supabase-js";
-import { 
-  Home, 
-  ShoppingCart, 
-  Package, 
-  Menu, 
-  Bell, 
-  Settings,
-  Moon,
-  Sun
-} from "lucide-react";
-import { useTheme } from "@/hooks/use-theme";
-import { Button } from "@/components/ui/button";
-import CartSidebar from "@/components/CartSidebar";
-import { useCart } from "@/hooks/use-cart";
 
-// Initialize Supabase client with environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { useState } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { CartSidebar } from "@/components/CartSidebar";
+import { useTheme } from "@/hooks/use-theme";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { Sun, Moon, Menu, ShoppingCart, LogOut, User } from "lucide-react";
+import { motion } from "framer-motion";
+import { useCart } from "@/hooks/use-cart";
+import Notifications from "@/components/Notifications";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardLayout = () => {
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const { user } = useUser();
   const { theme, setTheme } = useTheme();
-  const [userRole, setUserRole] = useState<string>("eater");
-  const [cartOpen, setCartOpen] = useState(false);
+  const { user } = useAuth();
+  const location = useLocation();
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { items } = useCart();
-  
-  useEffect(() => {
-    const getUserRole = async () => {
+  const [userRole, setUserRole] = useState<string>('eater');
+
+  // Get the user role from the database
+  useState(() => {
+    const fetchUserRole = async () => {
       if (!user) return;
       
       try {
         const { data, error } = await supabase
           .from("users")
           .select("role")
-          .eq("clerk_user_id", user.id)
+          .eq("id", user.id)
           .single();
         
-        if (error) {
-          console.error("Error fetching user role:", error);
-          return;
-        }
-        
-        if (data) {
+        if (!error && data) {
           setUserRole(data.role);
-          
-          // Redirect admin users if they're not on the admin page
-          if (data.role === "admin" && pathname === "/dashboard") {
-            navigate("/dashboard/admin");
-          }
         }
       } catch (err) {
-        console.error("Error:", err);
+        console.error("Error fetching user role:", err);
       }
     };
     
-    getUserRole();
-  }, [user, pathname, navigate]);
-  
+    fetchUserRole();
+  });
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
+  const isLinkActive = (path: string) => location.pathname === path;
+
+  const getNavItemClasses = (path: string) => {
+    return cn(
+      "flex items-center space-x-2 rounded-md px-3 py-2 transition-colors",
+      isLinkActive(path) 
+        ? "bg-hungryaf-primary text-white"
+        : "hover:bg-hungryaf-primary/10"
+    );
+  };
+
   const navItems = [
     {
-      label: "Dashboard",
-      icon: <Home className="h-5 w-5" />,
-      href: "/dashboard",
-      roles: ["eater", "delivery", "admin"],
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></svg>,
     },
     {
-      label: "Order Food",
-      icon: <ShoppingCart className="h-5 w-5" />,
-      href: "/dashboard/order",
-      roles: ["eater", "delivery", "admin"],
+      name: "Order Food",
+      path: "/dashboard/order",
+      icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M3 6h19v12H3V6Z" /><path d="m12.5 13-3-3h5.5l3 3H12.5Z" /></svg>,
     },
     {
-      label: "My Orders",
-      icon: <Package className="h-5 w-5" />,
-      href: "/dashboard/my-orders",
-      roles: ["eater", "delivery", "admin"],
-    },
-    {
-      label: "Deliver",
-      icon: <Menu className="h-5 w-5" />,
-      href: "/dashboard/deliver",
-      roles: ["delivery", "admin"],
-    },
-    {
-      label: "My Deliveries",
-      icon: <Bell className="h-5 w-5" />,
-      href: "/dashboard/my-deliveries",
-      roles: ["delivery", "admin"],
-    },
-    {
-      label: "Admin",
-      icon: <Settings className="h-5 w-5" />,
-      href: "/dashboard/admin",
-      roles: ["admin"],
+      name: "My Orders",
+      path: "/dashboard/my-orders",
+      icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" /><path d="M8 6h8" /><path d="M8 10h8" /><path d="M8 14h8" /><path d="M8 18h8" /></svg>,
     },
   ];
-  
-  const filteredNavItems = navItems.filter((item) => 
-    item.roles.includes(userRole)
-  );
+
+  // Add delivery options if user is a delivery partner
+  if (userRole === 'delivery') {
+    navItems.push(
+      {
+        name: "Deliver",
+        path: "/dashboard/deliver",
+        icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 15 15" /></svg>,
+      },
+      {
+        name: "My Deliveries",
+        path: "/dashboard/my-deliveries", 
+        icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>,
+      }
+    );
+  }
+
+  // Add admin options if user is an admin
+  if (userRole === 'admin') {
+    navItems.push(
+      {
+        name: "Admin",
+        path: "/dashboard/admin",
+        icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
+      }
+    );
+  }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
-        <div className="flex h-16 items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-4">
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <span className="text-xl font-bold tracking-tight text-hungryaf-primary">
-                HungryAF
-              </span>
+      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-2">
+            {/* Mobile Menu Trigger */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="outline" size="icon" aria-label="Menu">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[240px] sm:w-[300px]">
+                <nav className="flex flex-col gap-4 mt-8">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={getNavItemClasses(item.path)}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {item.icon}
+                      <span>{item.name}</span>
+                    </Link>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+            
+            {/* Logo */}
+            <Link to="/dashboard" className="flex items-center gap-1">
+              <span className="font-bold text-xl">Hungry<span className="text-hungryaf-primary">AF</span></span>
             </Link>
           </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Theme toggle */}
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  isLinkActive(item.path)
+                    ? "bg-hungryaf-primary text-white"
+                    : "text-muted-foreground hover:bg-hungryaf-primary/10 hover:text-foreground"
+                )}
+              >
+                {item.icon}
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            {/* Notifications */}
+            <Notifications />
+
+            {/* Cart Button */}
+            <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="relative">
+                  <ShoppingCart className="h-5 w-5" />
+                  {items.length > 0 && (
+                    <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-hungryaf-primary text-white text-xs flex items-center justify-center">
+                      {items.length}
+                    </span>
+                  )}
+                  <span className="sr-only">Open cart</span>
+                </Button>
+              </SheetTrigger>
+              <CartSidebar />
+            </Sheet>
+            
+            {/* Theme Toggle */}
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="rounded-full"
             >
               {theme === "dark" ? (
                 <Sun className="h-5 w-5" />
@@ -135,94 +196,26 @@ const DashboardLayout = () => {
               <span className="sr-only">Toggle theme</span>
             </Button>
             
-            {/* Cart button */}
-            {(userRole === "eater" || userRole === "admin") && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCartOpen(true)}
-                className="relative rounded-full"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {items.length > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-hungryaf-primary text-xs text-white">
-                    {items.length}
-                  </span>
-                )}
+            {/* User Menu */}
+            <div className="relative">
+              <Button variant="outline" size="icon" onClick={handleSignOut}>
+                <LogOut className="h-5 w-5" />
+                <span className="sr-only">Sign out</span>
               </Button>
-            )}
-            
-            {/* User button */}
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  userButtonAvatarBox: "h-8 w-8",
-                },
-              }}
-            />
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <div className="flex flex-1">
-        {/* Sidebar navigation */}
-        <aside className="hidden w-64 flex-shrink-0 border-r bg-background lg:block">
-          <nav className="flex flex-col gap-2 p-4">
-            {filteredNavItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
-                    isActive
-                      ? "bg-hungryaf-primary/10 text-hungryaf-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </aside>
-
-        {/* Mobile navigation */}
-        <div className="fixed bottom-0 left-0 right-0 z-10 border-t bg-background lg:hidden">
-          <nav className="grid grid-cols-4 gap-1">
-            {filteredNavItems.slice(0, 4).map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={`flex flex-col items-center gap-1 p-3 text-center text-xs ${
-                    isActive
-                      ? "text-hungryaf-primary"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Page content */}
-        <main className="flex-1 overflow-auto pb-16 lg:pb-0">
-          <div className="hungryaf-container">
-            <Outlet />
-          </div>
-        </main>
-      </div>
-
-      {/* Cart sidebar */}
-      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      {/* Main Content */}
+      <motion.main 
+        className="container py-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Outlet />
+      </motion.main>
     </div>
   );
 };
