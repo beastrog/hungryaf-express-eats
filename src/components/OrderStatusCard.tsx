@@ -5,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import OrderDetailsDialog from "@/components/OrderDetailsDialog";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface OrderStatusCardProps {
   order: {
@@ -46,6 +47,8 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
     return format(date, "MMM d, yyyy");
   });
   
+  const navigate = useNavigate();
+  
   // Format price from cents to INR
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -80,6 +83,11 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
   
   const overallStatus = getOverallStatus();
   const hasActiveDelivery = order.deliveries?.some(d => d.status === "accepted") || false;
+  const needsPayment = order.payment_status === "pending";
+  
+  const handlePayNow = () => {
+    navigate(`/dashboard/payment?orderId=${order.id}`);
+  };
   
   return (
     <Card className="overflow-hidden">
@@ -124,37 +132,58 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
       </CardContent>
       
       <CardFooter className="pt-2">
-        <div className="grid grid-cols-2 gap-2 w-full">
-          <OrderDetailsDialog 
-            orderId={order.id}
-            trigger={
-              <Button variant="outline" className="w-full" size="sm">
-                View Details
-              </Button>
-            }
-          />
-          
-          <OrderDetailsDialog 
-            orderId={order.id}
-            trigger={
-              <Button 
-                variant="outline" 
-                className={cn(
-                  "w-full", 
-                  hasActiveDelivery ? "bg-green-50 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800" : "text-muted-foreground"
-                )}
-                size="sm"
-                disabled={!hasActiveDelivery}
-              >
-                <MessageCircle className="h-4 w-4 mr-1" />
-                Chat
-                {hasActiveDelivery && (
-                  <span className="ml-1 h-2 w-2 rounded-full bg-green-500"></span>
-                )}
-              </Button>
-            }
-          />
-        </div>
+        {needsPayment ? (
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <OrderDetailsDialog 
+              orderId={order.id}
+              trigger={
+                <Button variant="outline" className="w-full" size="sm">
+                  View Details
+                </Button>
+              }
+            />
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              size="sm"
+              onClick={handlePayNow}
+            >
+              <CreditCard className="h-4 w-4 mr-1" />
+              Pay Now
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <OrderDetailsDialog 
+              orderId={order.id}
+              trigger={
+                <Button variant="outline" className="w-full" size="sm">
+                  View Details
+                </Button>
+              }
+            />
+            
+            <OrderDetailsDialog 
+              orderId={order.id}
+              trigger={
+                <Button 
+                  variant="outline" 
+                  className={cn(
+                    "w-full", 
+                    hasActiveDelivery ? "bg-green-50 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-800" : "text-muted-foreground"
+                  )}
+                  size="sm"
+                  disabled={!hasActiveDelivery}
+                >
+                  <MessageCircle className="h-4 w-4 mr-1" />
+                  Chat
+                  {hasActiveDelivery && (
+                    <span className="ml-1 h-2 w-2 rounded-full bg-green-500"></span>
+                  )}
+                </Button>
+              }
+            />
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/clerk-react";
-import { createClient } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,11 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/integrations/supabase/client";
 
 const MyDeliveries = () => {
   const { user } = useUser();
@@ -199,10 +194,10 @@ const MyDeliveries = () => {
         <Tabs defaultValue="active" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="active">
-              Active ({activeDeliveries.length})
+              Active ({deliveries.filter(d => d.status === "accepted").length})
             </TabsTrigger>
             <TabsTrigger value="completed">
-              Completed ({completedDeliveries.length})
+              Completed ({deliveries.filter(d => d.status === "completed").length})
             </TabsTrigger>
             <TabsTrigger value="all">All ({deliveries.length})</TabsTrigger>
           </TabsList>

@@ -16,6 +16,7 @@ import MyOrders from "./pages/MyOrders";
 import MyDeliveries from "./pages/MyDeliveries";
 import AdminDashboard from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Payment from "./pages/Payment";
 
 // Layouts
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -48,6 +49,7 @@ const App = () => {
               <Route path="my-orders" element={<MyOrders />} />
               <Route path="my-deliveries" element={<MyDeliveries />} />
               <Route path="admin" element={<AdminDashboard />} />
+              <Route path="payment" element={<Payment />} />
             </Route>
 
             {/* 404 route */}
