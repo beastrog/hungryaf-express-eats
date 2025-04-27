@@ -179,7 +179,7 @@ const DashboardLayout = () => {
                   <span className="sr-only">Open cart</span>
                 </Button>
               </SheetTrigger>
-              <CartSidebar />
+              <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
             </Sheet>
             
             {/* Theme Toggle */}
