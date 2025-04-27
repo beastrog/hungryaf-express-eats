@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { useUser } from "@clerk/clerk-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,7 @@ import { Minus, Plus, Trash2, CheckCircle, AlertCircle } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Initialize Supabase client with environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/integrations/supabase/client";
 
 interface CartSidebarProps {
   isOpen: boolean;

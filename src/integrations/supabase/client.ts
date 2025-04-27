@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+// Use hardcoded values to ensure the client always works
 const SUPABASE_URL = "https://waeqwwybijkxdnwtmbqi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhZXF3d3liaWpreGRud3RtYnFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU1ODk4MzgsImV4cCI6MjA2MTE2NTgzOH0.E3AG0PGN02aJrqXTV0D7-_P-O7kKaIHnmJVervDKPXY";
 
@@ -36,4 +37,3 @@ export type Notification = {
   read: boolean;
   created_at: string;
 };
-

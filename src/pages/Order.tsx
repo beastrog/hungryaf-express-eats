@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 import { useCart } from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import MenuCard from "@/components/MenuCard";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Initialize Supabase client with environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from "@/integrations/supabase/client";
 
 const OrderPage = () => {
   const [menuItems, setMenuItems] = useState<any[]>([]);
