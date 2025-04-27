@@ -37,3 +37,12 @@ export type Notification = {
   read: boolean;
   created_at: string;
 };
+
+// Add extended client typing for chat_messages and notifications tables
+// This is a workaround until the database types are properly updated
+declare module '@supabase/supabase-js' {
+  interface SupabaseClient<T> {
+    from(table: 'chat_messages'): any;
+    from(table: 'notifications'): any;
+  }
+}
