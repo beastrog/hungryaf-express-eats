@@ -18,7 +18,7 @@ interface CartSidebarProps {
   onClose: () => void;
 }
 
-const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
+export const CartSidebar = ({ isOpen, onClose }: CartSidebarProps) => {
   const { items, removeItem, updateQuantity, clearCart, totalPrice } = useCart();
   const { user } = useUser();
   const [loading, setLoading] = useState(false);

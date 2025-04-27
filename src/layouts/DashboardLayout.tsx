@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { CartSidebar } from "@/components/CartSidebar";
+import { CartSidebar } from "@/components/CartSidebar"; // Named import
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
